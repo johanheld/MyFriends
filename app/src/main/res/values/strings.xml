@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">MyFriends</string>
+    <string name="title_activity_maps">Map</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="unsubscribe">Unsubscribe</string>
+    <string name="new_group">New Group</string>
+    <string name="groups">Groups</string>
+    <string name="current_group">Current Group:</string>
+    <string name="name">Name</string>
+</resources>

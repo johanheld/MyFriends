@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MyFriends</string>
+    <string name="unsubscribe">Lämna Grupp</string>
+    <string name="new_group">Ny Grupp</string>
+    <string name="groups">Grupper</string>
+    <string name="current_group">Nuvarande Grupp:</string>
+    <string name="name">Namn</string>
+</resources>
