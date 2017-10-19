@@ -63,6 +63,8 @@ public class GroupFragment extends Fragment
         btnNewGroup.setOnClickListener(new NewGroupListener());
         list = (ListView) view.findViewById(R.id.list);
 
+//        controller.getGroups();
+
         if (MapsActivity.group != null)
             etCurrentGroup.setText(getString(R.string.current_group) + " " + MapsActivity.group);
 

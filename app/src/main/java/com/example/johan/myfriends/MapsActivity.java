@@ -26,6 +26,7 @@ public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGr
     MapsFragment mapFragment;
     GroupFragment groupFragment;
     private boolean connected = false;
+    public static boolean connectedToGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -46,9 +47,14 @@ public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGr
 //            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 0, locationListener);
 //            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, locationListener);
 //        }
-
-        controller = new Controller(this, groupFragment, mapFragment);
+        if (savedInstanceState != null)
+        {
+            connectedToGroup = savedInstanceState.getBoolean("connectedToGroup");
+            id = savedInstanceState.getString("userid");
+        }
+        controller = new Controller(this, groupFragment, mapFragment, savedInstanceState);
         groupFragment.setController(controller);
+        startLocationListener();
 //        init();
     }
 
@@ -71,6 +77,15 @@ public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGr
 //            }
 //        });
 //    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        outState.putBoolean("connectedToGroup", connectedToGroup);
+        outState.putString("userid", id);
+        super.onSaveInstanceState(outState);
+    }
 
     @Override
     protected void onResume()
@@ -128,7 +143,7 @@ public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGr
     public void startLocationListener()
     {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationListener = new LocList(this, id);
+        locationListener = new LocList(this);//, id);
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED)
         {
@@ -157,16 +172,26 @@ public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGr
         setFragment(groupFragment, true);
     }
 
+//    public void setId(String id)
+//    {
+//        locationListener.
+//    }
+
     private class LocList implements LocationListener
     {
         Activity activity;
-        String id;
+//        public String id;
 
-        public LocList(Activity a, String id)
+        public LocList(Activity a)//, String id)
         {
             this.activity = a;
-            this.id = id;
+//            this.id = id;
         }
+
+//        public void setId()
+//        {
+//            this.id = id;
+//        }
 
         @Override
         public void onLocationChanged(Location location)
@@ -176,7 +201,11 @@ public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGr
             String lati = ("" + latitude);
             String lon = ("" + longitude);
             Log.d("onLocChanged", "Lng=" + longitude + ",Lat=" + latitude);
-            controller.setPosition(id, lon, lati);
+
+            if (connectedToGroup)
+                controller.setPosition(id, lon, lati);
+
+            Log.d("Connected to Group", " " + connectedToGroup);
         }
 
         @Override

@@ -3,6 +3,7 @@ package com.example.johan.myfriends;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.JsonWriter;
 import android.util.Log;
@@ -31,7 +32,7 @@ public class Controller implements Serializable
     private GroupFragment groupFragment;
     private MapsFragment mapsFragment;
 
-    public Controller(MapsActivity mapsActivity, GroupFragment groupFragment, MapsFragment mapsFragment)
+    public Controller(MapsActivity mapsActivity, GroupFragment groupFragment, MapsFragment mapsFragment, Bundle savedInstanceState)
     {
         //TODO sätt MapsActivitys controller till this
         activity = mapsActivity;
@@ -39,7 +40,8 @@ public class Controller implements Serializable
         this.mapsFragment = mapsFragment;
         Intent intent = new Intent(activity, TCPConnection.class);
 
-        activity.startService(intent);
+        if (savedInstanceState == null)
+            activity.startService(intent);
 
         serviceConn = new ServiceConn();
         boolean result = activity.bindService(intent, serviceConn, 0);
@@ -161,7 +163,8 @@ public class Controller implements Serializable
 
                 activity.runOnUiThread(new SetGroup(groupName));
                 activity.id =id;
-                activity.runOnUiThread(new StartLocationListener());
+                activity.connectedToGroup = true;
+                //activity.runOnUiThread(new StartLocationListener());
             }
 
             if (type.equals("locations"))
