@@ -8,6 +8,7 @@ import android.os.IBinder;
 import android.util.JsonWriter;
 import android.util.Log;
 
+import com.example.johan.myfriends.Modules.TextMessage;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
@@ -17,6 +18,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by johan on 2017-10-10.
@@ -26,18 +29,20 @@ public class Controller implements Serializable
 {
     private TCPConnection mService;
     private boolean bound = false;
-    private MapsActivity activity;
+    private MainActivity activity;
     private ServiceConnection serviceConn;
     private Listener listener;
     private GroupFragment groupFragment;
     private MapsFragment mapsFragment;
+    private MessageFragment messageFragment;
+    private ArrayList <TextMessage> messages;
 
-    public Controller(MapsActivity mapsActivity, GroupFragment groupFragment, MapsFragment mapsFragment, Bundle savedInstanceState)
+    public Controller(MainActivity mapsActivity, GroupFragment groupFragment, MapsFragment mapsFragment, MessageFragment messageFragment, Bundle savedInstanceState)
     {
-        //TODO sätt MapsActivitys controller till this
         activity = mapsActivity;
         this.groupFragment = groupFragment;
         this.mapsFragment = mapsFragment;
+        this.messageFragment = messageFragment;
         Intent intent = new Intent(activity, TCPConnection.class);
 
         if (savedInstanceState == null)
@@ -51,9 +56,9 @@ public class Controller implements Serializable
         else
             Log.d("Controller-constructor", "Service has been bound");
 
+        messages = new ArrayList<TextMessage>();
 //        mService.connect();
     }
-
 
     public void onDestroy()
     {
@@ -69,7 +74,6 @@ public class Controller implements Serializable
     {
         mService.connect();
     }
-
 
     //Denna klassen har koll på anslutningen till servicen
     private class ServiceConn implements ServiceConnection
@@ -101,7 +105,6 @@ public class Controller implements Serializable
     /** Listens to incoming messages to the TCPConnection service
      *
      */
-
     private class Listener extends Thread
     {
         public void stopListener()
@@ -121,7 +124,7 @@ public class Controller implements Serializable
                     message = mService.receive();
                     Log.d("Controller - Listener", message);
                     readJson(message);
-//                    activity.runOnUiThread(new UpdateUI(message));
+
                 } catch (InterruptedException e)
                 {
                     e.printStackTrace();
@@ -131,15 +134,25 @@ public class Controller implements Serializable
         }
     }
 
+    public List getMessages()
+    {
+        if (!messages.isEmpty())
+            return messages;
+
+        return null;
+    }
+
+    /** Messages received from the server are sent here where the message is dealt
+     *  with depending on the type of message
+     *
+     * @param json
+     */
+
     public void readJson(String json)
     {
-
-        //TODO ID måste hanteras och sparas för fortsatt kommunikation
         try
         {
             JSONObject reader = new JSONObject(json);
-
-
             String type = reader.getString("type");
 
             if (type.equals("groups"))
@@ -164,7 +177,6 @@ public class Controller implements Serializable
                 activity.runOnUiThread(new SetGroup(groupName));
                 activity.id =id;
                 activity.connectedToGroup = true;
-                //activity.runOnUiThread(new StartLocationListener());
             }
 
             if (type.equals("locations"))
@@ -183,6 +195,17 @@ public class Controller implements Serializable
                     }
 
                     activity.runOnUiThread(new SetMarkers(members));
+            }
+
+            if (type.equals("textchat"))
+            {
+                String group = reader.getString("group");
+                String member = reader.getString("member");
+                String text = reader.getString("text");
+
+                messages.add(new TextMessage(group, member, text));
+                activity.runOnUiThread(new UpdateMessages(getMessages()));
+                Log.d("Listener", "Textmessage received");
             }
 
         } catch (JSONException e)
@@ -206,13 +229,19 @@ public class Controller implements Serializable
             writer.beginObject()
                     .name("type").value("register")
                     .name("group").value(groupName)
-                    .name("member").value("Waldo").endObject();
+                    .name("member").value("Bobby Briggs").endObject();
         } catch (IOException e)
         {
             e.printStackTrace();
         }
         mService.send(stringWriter.toString());
+        activity.startLocationListener();
     }
+
+    /** Unregisters the users from the current group
+     *
+     * @param id
+     */
 
     public void unregister(String id)
     {
@@ -251,6 +280,30 @@ public class Controller implements Serializable
                     .name("id").value(id)
                     .name("longitude").value(longitude)
                     .name("latitude").value(latitude).endObject();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        mService.send(stringWriter.toString());
+    }
+
+    /** Sends a text message to the server
+     *
+     * @param text
+     */
+
+    public void sendText(String text)
+    {
+        StringWriter stringWriter = new StringWriter();
+        JsonWriter writer = new JsonWriter(stringWriter);
+
+        try
+        {
+            writer.beginObject()
+                    .name("type").value("textchat")
+                    .name("id").value(MainActivity.id)
+                    .name("text").value(text).endObject();
         } catch (IOException e)
         {
             e.printStackTrace();
@@ -299,8 +352,6 @@ public class Controller implements Serializable
             e.printStackTrace();
         }
 
-//        Log.d("JSON TO SERVER", stringWriter.toString());
-
         mService.send(stringWriter.toString());
         return stringWriter.toString();
     }
@@ -345,6 +396,11 @@ public class Controller implements Serializable
         }
     }
 
+    /** When locations from a group is received from the server this method puts the markers
+     *  on the mapFragment
+     *
+     */
+
     private class SetMarkers implements Runnable
     {
         private Member [] members;
@@ -360,12 +416,22 @@ public class Controller implements Serializable
         }
     }
 
-    private class StartLocationListener implements Runnable
+    /** Updates the ListView in MessageFragment with new messages
+     *
+     */
+
+    private class UpdateMessages implements Runnable
     {
+        private List <TextMessage> list;
+
+        public UpdateMessages(List <TextMessage> list)
+        {
+            this.list = list;
+        }
         @Override
         public void run()
         {
-            activity.startLocationListener();
+            messageFragment.updateMessages(list);
         }
     }
 }

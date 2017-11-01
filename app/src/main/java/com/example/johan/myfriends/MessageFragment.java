@@ -12,27 +12,27 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 
+import com.example.johan.myfriends.Modules.TextMessage;
+
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class GroupFragment extends Fragment
+public class MessageFragment extends Fragment
 {
-
-    private ListView list;
-    private Button btnUnsubscribe;
-    private Button btnNewGroup;
+    private Button btnText;
+    private Button btnImage;
+    private ListView listView;
     private Controller controller;
-    private TextView etCurrentGroup;
+    private ListAdapter adapter;
+    private MainActivity mainActivity;
 
-    public GroupFragment()
+    public MessageFragment()
     {
         // Required empty public constructor
     }
@@ -42,9 +42,32 @@ public class GroupFragment extends Fragment
                              Bundle savedInstanceState)
     {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_group, container, false);
+        View view = inflater.inflate(R.layout.fragment_message, container, false);
         init(view);
+        mainActivity = (MainActivity) getActivity();
         return view;
+    }
+
+    public void updateMessages(List<TextMessage> messages)
+    {
+        adapter = new ListAdapter(mainActivity, messages);
+        listView.setAdapter(adapter);
+    }
+
+    private void init(View view)
+    {
+        btnText = (Button)view.findViewById(R.id.btnText);
+        btnImage = (Button)view.findViewById(R.id.btnImage);
+        listView = (ListView)view.findViewById(R.id.messageList);
+
+        btnText.setOnClickListener(new NewTextListener());
+
+        List messages = controller.getMessages();
+
+        if (messages != null)
+        {
+            updateMessages(messages);
+        }
     }
 
     public void setController(Controller controller)
@@ -52,51 +75,13 @@ public class GroupFragment extends Fragment
         this.controller = controller;
     }
 
-    private void init(View view)
+    private class NewTextListener implements View.OnClickListener
     {
-        etCurrentGroup = (TextView)view.findViewById(R.id.tvCurrentGroup);
-        btnUnsubscribe = (Button)view.findViewById(R.id.btnUnsubscribe);
-        btnUnsubscribe.setOnClickListener(new UnsubscribeListener());
-        btnNewGroup = (Button)view.findViewById(R.id.btnNewGroup);
-        btnNewGroup.setOnClickListener(new NewGroupListener());
-        list = (ListView) view.findViewById(R.id.list);
-
-//        controller.getGroups();
-
-        if (MainActivity.group != null)
-            etCurrentGroup.setText(getString(R.string.current_group) + " " + MainActivity.group);
-
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
-            {
-                String group = (String)parent.getItemAtPosition(position);
-                controller.register(group);
-            }
-        });
-
-    }
-
-    public void setGroups(String [] groups)
-    {
-        String [] array = groups;
-        list.setAdapter(new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, array));
-    }
-
-    public void setCurrentGroup(String group)
-    {
-        etCurrentGroup.setText(getString(R.string.current_group) + " " + group);
-    }
-
-    private class NewGroupListener implements View.OnClickListener
-    {
-
         @Override
         public void onClick(View v)
         {
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-            builder.setTitle("Title");
+            builder.setTitle("Message");
 
             // Set up the input
             final EditText input = new EditText(getContext());
@@ -110,8 +95,8 @@ public class GroupFragment extends Fragment
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     Log.d( "New group name" ,input.getText().toString());
-                    controller.register(input.getText().toString());
-                    controller.getGroups();
+                    controller.sendText(input.getText().toString());
+
                 }
             });
             builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -132,18 +117,6 @@ public class GroupFragment extends Fragment
             });
 
             dialog.show();
-        }
-    }
-
-    private class UnsubscribeListener implements View.OnClickListener
-    {
-        @Override
-        public void onClick(View v)
-        {
-            controller.unregister(MainActivity.id);
-            etCurrentGroup.setText("Current Group: ");
-            MainActivity.group = null;
-            MainActivity.id = null;
         }
     }
 }

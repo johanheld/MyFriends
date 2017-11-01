@@ -27,6 +27,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback
     View mView;
     OnGroupsPressed mListener;
     private Button btnGroups;
+    private Button btnMessages;
 
     public MapsFragment()
     {
@@ -62,7 +63,16 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback
             @Override
             public void onClick(View v)
             {
-                mListener.onGroupPressed();
+                mListener.onGroupPressed("GROUPS");
+            }
+        });
+        btnMessages = (Button)mView.findViewById(R.id.btnMessages);
+        btnMessages.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                mListener.onGroupPressed("MESSAGES");
             }
         });
     }
@@ -84,25 +94,17 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap)
     {
-//        MapsInitializer.initialize(getContext());
-
         mGoogleMap = googleMap;
         googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
-//        LatLng sydney = new LatLng(-34, 151);
-//        googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-//        googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-
     }
 
     public interface OnGroupsPressed
     {
-        public void onGroupPressed();
+        public void onGroupPressed(String fragment);
     }
 
     public void addMarker(Member[] members)
     {
-//        addMarker = false;
         mGoogleMap.clear();
         for (int n = 0; n < members.length; n++)
         {

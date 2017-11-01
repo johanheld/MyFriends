@@ -9,4 +9,7 @@
     <string name="groups">Groups</string>
     <string name="current_group">Current Group:</string>
     <string name="name">Name</string>
+    <string name="messages">Messages</string>
+    <string name="send_text">Send Text</string>
+    <string name="send_image">Send Image</string>
 </resources>

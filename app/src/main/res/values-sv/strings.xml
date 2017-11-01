@@ -6,4 +6,7 @@
     <string name="groups">Grupper</string>
     <string name="current_group">Nuvarande Grupp:</string>
     <string name="name">Namn</string>
+    <string name="messages">Meddelanden</string>
+    <string name="send_image">Skicka Bild</string>
+    <string name="send_text">Skicka meddelande</string>
 </resources>

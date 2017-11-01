@@ -13,7 +13,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Button;
 
-public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGroupsPressed
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity implements MapsFragment.OnGroupsPressed
 {
 
     private LocationManager locationManager;
@@ -25,58 +27,36 @@ public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGr
     public static String group;
     MapsFragment mapFragment;
     GroupFragment groupFragment;
+    MessageFragment messageFragment;
     private boolean connected = false;
     public static boolean connectedToGroup;
+    private static String TAG_MAP_FRAGMENT = "mapFragment";
+    private static String TAG_GROUP_FRAGMENT = "groupFragment";
+    private static String TAG_MESSAGE_FRAGMENT = "messageFragment";
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+        setContentView(R.layout.activity_main);
 
         mapFragment = new MapsFragment();
         groupFragment = new GroupFragment();
+        messageFragment = new MessageFragment();
         setFragment(mapFragment, false);
 
-//        locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-//        locationListener = new LocList(this);
-//
-//        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_DENIED) {
-//            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_ACCESS_FINE_LOCATION);
-//        } else {
-//            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 0, locationListener);
-//            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, locationListener);
-//        }
         if (savedInstanceState != null)
         {
             connectedToGroup = savedInstanceState.getBoolean("connectedToGroup");
             id = savedInstanceState.getString("userid");
         }
-        controller = new Controller(this, groupFragment, mapFragment, savedInstanceState);
+        controller = new Controller(this, groupFragment, mapFragment, messageFragment, savedInstanceState);
         groupFragment.setController(controller);
-        startLocationListener();
-//        init();
+        messageFragment.setController(controller);
+
     }
 
 
-//    private void init()
-//    {
-//        btnGroups = (Button) findViewById(R.id.btnGroups);
-//        btnGroups.setOnClickListener(new View.OnClickListener()
-//        {
-//            @Override
-//            public void onClick(View v)
-//            {
-//                if (!connected)
-//                {
-//                    controller.connect();
-//                    connected = true;
-//                }
-//                controller.getGroups();
-//                setFragment(groupFragment, true);
-//            }
-//        });
-//    }
 
 
     @Override
@@ -91,13 +71,6 @@ public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGr
     protected void onResume()
     {
         super.onResume();
-
-//        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_DENIED) {
-//            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_ACCESS_FINE_LOCATION);
-//        } else {
-//            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 0, locationListener);
-//            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, locationListener);
-//        }
     }
 
     @Override
@@ -161,15 +134,31 @@ public class MapsActivity extends AppCompatActivity implements MapsFragment.OnGr
     }
 
     @Override
-    public void onGroupPressed()
+    public void onGroupPressed(String fragment)
     {
         if (!connected)
         {
             controller.connect();
             connected = true;
         }
-        controller.getGroups();
-        setFragment(groupFragment, true);
+
+        if (fragment.equals("GROUPS"))
+        {
+            controller.getGroups();
+            setFragment(groupFragment, true);
+        }
+
+        if (fragment.equals("MESSAGES"))
+        {
+            List messages = controller.getMessages();
+
+            if (messages != null)
+            {
+                messageFragment.updateMessages(messages);
+                Log.d("AAA", "FINNS");
+            }
+            setFragment(messageFragment, true);
+        }
     }
 
 //    public void setId(String id)
