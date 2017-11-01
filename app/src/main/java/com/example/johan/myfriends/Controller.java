@@ -3,6 +3,7 @@ package com.example.johan.myfriends;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.JsonWriter;
@@ -208,6 +209,29 @@ public class Controller implements Serializable
                 Log.d("Listener", "Textmessage received");
             }
 
+            if (type.equals("imagechat"))
+            {
+                String group = reader.getString("group");
+                String member = reader.getString("member");
+                String text = reader.getString("text");
+                String imageid = reader.getString("imageid");
+//                String text = reader.getString("text");
+
+//                messages.add(new TextMessage(group, member, text));
+//                activity.runOnUiThread(new UpdateMessages(getMessages()));
+                Log.d("Listener", "Image received");
+            }
+
+            if (type.equals("upload"))
+            {
+                String imageId = reader.getString("imageid");
+                String port = reader.getString("port");
+                mService.sendImage(messageFragment.getImage(), imageId, port);
+
+                activity.runOnUiThread(new UpdateMessages(getMessages()));
+                Log.d("Listener", "Textmessage received");
+            }
+
         } catch (JSONException e)
         {
             e.printStackTrace();
@@ -304,6 +328,29 @@ public class Controller implements Serializable
                     .name("type").value("textchat")
                     .name("id").value(MainActivity.id)
                     .name("text").value(text).endObject();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        mService.send(stringWriter.toString());
+    }
+
+    public void sendImage(String text)
+    {
+        StringWriter stringWriter = new StringWriter();
+        JsonWriter writer = new JsonWriter(stringWriter);
+        Location location = MainActivity.lastLocation;
+        String lat = ("" + location.getLatitude());
+        String lon = ("" + location.getLongitude());
+        try
+        {
+            writer.beginObject()
+                    .name("type").value("imagechat")
+                    .name("id").value(MainActivity.id)
+                    .name("text").value(text)
+                    .name("longitude").value(lon)
+                    .name("latitude").value(lat).endObject();
         } catch (IOException e)
         {
             e.printStackTrace();

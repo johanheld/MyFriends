@@ -1,11 +1,18 @@
 package com.example.johan.myfriends;
 
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,7 +25,15 @@ import android.widget.ListView;
 
 import com.example.johan.myfriends.Modules.TextMessage;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+
+import static android.app.Activity.RESULT_OK;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -31,6 +46,12 @@ public class MessageFragment extends Fragment
     private Controller controller;
     private ListAdapter adapter;
     private MainActivity mainActivity;
+    private Uri pictureUri;
+    private String mCurrentPhotoPath;
+    private byte[] photo;
+
+    static final int THUMBNAIL = 1;
+    static final int PICTURE = 2;
 
     public MessageFragment()
     {
@@ -56,11 +77,12 @@ public class MessageFragment extends Fragment
 
     private void init(View view)
     {
-        btnText = (Button)view.findViewById(R.id.btnText);
-        btnImage = (Button)view.findViewById(R.id.btnImage);
-        listView = (ListView)view.findViewById(R.id.messageList);
+        btnText = (Button) view.findViewById(R.id.btnText);
+        btnImage = (Button) view.findViewById(R.id.btnImage);
+        listView = (ListView) view.findViewById(R.id.messageList);
 
         btnText.setOnClickListener(new NewTextListener());
+        btnImage.setOnClickListener(new NewImageListener());
 
         List messages = controller.getMessages();
 
@@ -91,26 +113,32 @@ public class MessageFragment extends Fragment
             builder.setView(input);
 
             // Set up the buttons
-            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            builder.setPositiveButton("OK", new DialogInterface.OnClickListener()
+            {
                 @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Log.d( "New group name" ,input.getText().toString());
+                public void onClick(DialogInterface dialog, int which)
+                {
+                    Log.d("New group name", input.getText().toString());
                     controller.sendText(input.getText().toString());
 
                 }
             });
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener()
+            {
                 @Override
-                public void onClick(DialogInterface dialog, int which) {
+                public void onClick(DialogInterface dialog, int which)
+                {
                     dialog.cancel();
                 }
             });
 
             AlertDialog dialog = builder.create();
-            dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            dialog.setOnShowListener(new DialogInterface.OnShowListener()
+            {
 
                 @Override
-                public void onShow(DialogInterface dialog) {
+                public void onShow(DialogInterface dialog)
+                {
                     InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
                 }
@@ -118,5 +146,63 @@ public class MessageFragment extends Fragment
 
             dialog.show();
         }
+    }
+
+    private class NewImageListener implements View.OnClickListener
+    {
+
+        @Override
+        public void onClick(View v)
+        {
+            dispatchTakePictureIntent();
+        }
+    }
+
+    //TODO Connection seem to be lost when camera is launched
+
+    private void dispatchTakePictureIntent()
+    {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(mainActivity.getPackageManager()) != null)
+        {
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String filename = "JPEG_" + timeStamp + ".jpg";
+            File dir = mainActivity.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            pictureUri = Uri.fromFile(new File(dir, filename));
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, pictureUri);
+            startActivityForResult(intent, PICTURE);
+        }
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == THUMBNAIL && resultCode == Activity.RESULT_OK)
+        {
+        } // thumbnail
+        else if (requestCode == PICTURE && resultCode == Activity.RESULT_OK)
+        {
+            String pathToPicture = pictureUri.getPath();
+            Log.d("PATH", pathToPicture);
+            try
+            {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(mainActivity.getContentResolver(), pictureUri);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 20, stream);
+                photo = stream.toByteArray();
+                controller.sendImage("HEJHEJ");
+
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+//            ivPicture.setImageBitmap(getScaled(pathToPicture, 500, 500));
+        }
+    }
+
+    public byte[] getImage()
+    {
+        return photo;
     }
 }

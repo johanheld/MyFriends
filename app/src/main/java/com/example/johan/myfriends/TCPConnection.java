@@ -12,6 +12,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -78,6 +79,11 @@ public class TCPConnection extends Service
         thread.execute(new Send(json));
     }
 
+    public void sendImage(byte[] image, String imageid, String port)
+    {
+        thread.execute(new SendImage(image, imageid, port));
+    }
+
     private class Connect implements Runnable
     {
         public void run()
@@ -125,6 +131,42 @@ public class TCPConnection extends Service
             }
         }
     }
+
+    private class SendImage implements Runnable
+    {
+        private byte[] image;
+        private String imageid;
+        private String port;
+
+        public SendImage(byte[] image, String imageid, String port)
+        {
+            this.image = image;
+            this.imageid = imageid;
+            this.port = port;
+        }
+
+        @Override
+        public void run()
+        {
+            ObjectOutputStream output= null;
+            try
+            {
+                output = new ObjectOutputStream(socket.getOutputStream());
+                output.flush();
+                output.writeUTF(imageid);
+                output.flush();
+                output.writeObject(image);
+                output.flush();
+
+                socket.close();
+            } catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 
     private class Receive extends Thread {
         public void run() {

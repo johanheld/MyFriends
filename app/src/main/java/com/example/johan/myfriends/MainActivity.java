@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.StrictMode;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements MapsFragment.OnGr
     private static String TAG_MAP_FRAGMENT = "mapFragment";
     private static String TAG_GROUP_FRAGMENT = "groupFragment";
     private static String TAG_MESSAGE_FRAGMENT = "messageFragment";
+    public static Location lastLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -54,6 +56,8 @@ public class MainActivity extends AppCompatActivity implements MapsFragment.OnGr
         groupFragment.setController(controller);
         messageFragment.setController(controller);
 
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
     }
 
 
@@ -83,7 +87,9 @@ public class MainActivity extends AppCompatActivity implements MapsFragment.OnGr
     @Override
     protected void onPause()
     {
-        locationManager.removeUpdates(locationListener);
+        if(connectedToGroup)
+            locationManager.removeUpdates(locationListener);
+
         super.onPause();
     }
 
@@ -112,6 +118,7 @@ public class MainActivity extends AppCompatActivity implements MapsFragment.OnGr
 
         ft.commit();
     }
+
 
     public void startLocationListener()
     {
@@ -185,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements MapsFragment.OnGr
         @Override
         public void onLocationChanged(Location location)
         {
+            lastLocation = location;
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
             String lati = ("" + latitude);
