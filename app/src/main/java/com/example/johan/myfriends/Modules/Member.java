@@ -1,4 +1,4 @@
-package com.example.johan.myfriends;
+package com.example.johan.myfriends.Modules;
 
 import com.google.android.gms.maps.model.LatLng;
 

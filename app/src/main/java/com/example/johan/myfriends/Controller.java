@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.util.JsonWriter;
 import android.util.Log;
 
+import com.example.johan.myfriends.Modules.Member;
 import com.example.johan.myfriends.Modules.TextMessage;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -183,7 +184,7 @@ public class Controller implements Serializable
             if (type.equals("locations"))
             {
                 JSONArray array = reader.getJSONArray("location");
-                Member [] members = new Member[array.length()];
+                Member[] members = new Member[array.length()];
 
                     for (int i = 0; i < array.length(); i++)
                     {
@@ -228,8 +229,8 @@ public class Controller implements Serializable
                 String port = reader.getString("port");
                 mService.sendImage(messageFragment.getImage(), imageId, port);
 
-                activity.runOnUiThread(new UpdateMessages(getMessages()));
-                Log.d("Listener", "Textmessage received");
+//                activity.runOnUiThread(new UpdateMessages(getMessages()));
+//                Log.d("Listener", "Textmessage received");
             }
 
         } catch (JSONException e)

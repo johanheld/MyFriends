@@ -149,16 +149,18 @@ public class TCPConnection extends Service
         public void run()
         {
             ObjectOutputStream output= null;
+            int p = Integer.parseInt(port);
             try
             {
-                output = new ObjectOutputStream(socket.getOutputStream());
+                Socket s = new Socket(address, p);
+                output = new ObjectOutputStream(s.getOutputStream());
                 output.flush();
                 output.writeUTF(imageid);
                 output.flush();
                 output.writeObject(image);
                 output.flush();
 
-                socket.close();
+                s.close();
             } catch (IOException e)
             {
                 e.printStackTrace();

@@ -189,7 +189,7 @@ public class MessageFragment extends Fragment
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(mainActivity.getContentResolver(), pictureUri);
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 20, stream);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 5, stream);
                 photo = stream.toByteArray();
                 controller.sendImage("HEJHEJ");
 
